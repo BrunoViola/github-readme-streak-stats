@@ -53,9 +53,9 @@ function getCacheFilePath(string $key): string
  */
 function ensureCacheDir(): bool
 {
-    if (!is_dir(CACHE_DIR)) {
-        return mkdir(CACHE_DIR, 0755, true);
-    }
+    // if (!is_dir(CACHE_DIR)) {
+    //     return mkdir(CACHE_DIR, 0755, true);
+    // }
     return true;
 }
 
@@ -69,48 +69,8 @@ function ensureCacheDir(): bool
  */
 function getCachedStats(string $user, array $options = [], int $maxAge = CACHE_DURATION): ?array
 {
-    $key = getCacheKey($user, $options);
-    $filePath = getCacheFilePath($key);
-
-    if (!file_exists($filePath)) {
-        return null;
-    }
-
-    $mtime = filemtime($filePath);
-    if ($mtime === false) {
-        return null;
-    }
-
-    $fileAge = time() - $mtime;
-    if ($fileAge > $maxAge) {
-        unlink($filePath);
-        return null;
-    }
-
-    $handle = fopen($filePath, "r");
-    if ($handle === false) {
-        return null;
-    }
-
-    if (!flock($handle, LOCK_SH)) {
-        fclose($handle);
-        return null;
-    }
-
-    $contents = stream_get_contents($handle);
-    flock($handle, LOCK_UN);
-    fclose($handle);
-
-    if ($contents === false || $contents === "") {
-        return null;
-    }
-
-    $data = json_decode($contents, true);
-    if (!is_array($data)) {
-        return null;
-    }
-
-    return $data;
+     // always return null (no cache)
+    return null;
 }
 
 /**
@@ -123,26 +83,7 @@ function getCachedStats(string $user, array $options = [], int $maxAge = CACHE_D
  */
 function setCachedStats(string $user, array $options, array $stats): bool
 {
-    if (!ensureCacheDir()) {
-        error_log("Failed to create cache directory: " . CACHE_DIR);
-        return false;
-    }
-
-    $key = getCacheKey($user, $options);
-    $filePath = getCacheFilePath($key);
-
-    $data = json_encode($stats);
-    if ($data === false) {
-        error_log("Failed to encode stats to JSON for user: " . $user);
-        return false;
-    }
-
-    $result = file_put_contents($filePath, $data, LOCK_EX);
-    if ($result === false) {
-        error_log("Failed to write cache file: " . $filePath);
-        return false;
-    }
-
+    // (no cache)
     return true;
 }
 
@@ -154,31 +95,7 @@ function setCachedStats(string $user, array $options, array $stats): bool
  */
 function clearExpiredCache(int $maxAge = CACHE_DURATION): int
 {
-    if (!is_dir(CACHE_DIR)) {
-        return 0;
-    }
-
-    $deleted = 0;
-    $files = glob(CACHE_DIR . "/*.json");
-
-    if ($files === false) {
-        return 0;
-    }
-
-    foreach ($files as $file) {
-        $mtime = filemtime($file);
-        if ($mtime === false) {
-            continue;
-        }
-        $fileAge = time() - $mtime;
-        if ($fileAge > $maxAge) {
-            if (unlink($file)) {
-                $deleted++;
-            }
-        }
-    }
-
-    return $deleted;
+    return 0;
 }
 
 /**
@@ -194,16 +111,7 @@ function clearExpiredCache(int $maxAge = CACHE_DURATION): int
  */
 function clearUserCache(string $user): bool
 {
-    if (!is_dir(CACHE_DIR)) {
-        return true;
-    }
-
-    $key = getCacheKey($user, []);
-    $filePath = getCacheFilePath($key);
-
-    if (file_exists($filePath)) {
-        return unlink($filePath);
-    }
+    // (no-cache)
 
     return true;
 }
